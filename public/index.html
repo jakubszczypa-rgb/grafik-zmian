@@ -46,13 +46,16 @@ h1 small{display:block;font-size:15px;font-weight:500;color:var(--mut);letter-sp
 .day:hover{background:var(--soft)}
 .day.we{background:var(--wk)}.day.we:hover{background:var(--soft)}
 .day.pad{background:var(--wk);pointer-events:none}
+.day.hol{background:light-dark(#fdeeee,#2a1a1c)}.day.hol:hover{background:light-dark(#fbe2e2,#33201f)}
+.day.hol .num{color:#d42a2a}.wd.sun{color:#d42a2a}
+.hn{font-size:11.5px;font-weight:600;color:#d42a2a;line-height:1.2;margin:-2px 0 2px}
 .dn{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:2px}
 .dn .wn{display:none;font-weight:500;color:var(--mut);margin-left:6px}
-.today .dn .num{background:var(--ink);color:var(--bg);border-radius:999px;padding:0 8px}
-.pill{display:flex;flex-wrap:wrap;align-items:center;gap:1px 5px;font-size:13px;line-height:1.25;padding:3px 7px;border-radius:7px;font-weight:600}
+.today .dn .num{background:var(--ink);color:var(--bg);border-radius:999px;padding:0 8px}.today.hol .dn .num{background:#d42a2a;color:#fff}
+.pill{display:flex;align-items:center;gap:4px;font-size:12.5px;line-height:1.3;padding:3px 6px;border-radius:6px;font-weight:600;white-space:nowrap;overflow:hidden}
 .pill .nm{font-weight:800}
-.pill .tm{font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
-.pill svg{flex:none;width:12px;height:12px}
+.pill .nm{flex:none}.pill .tm{font-weight:500;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.pill svg{flex:none;width:10px;height:10px;margin-right:-1px}
 .pill{color:#fff}
 .p-tomek{background:var(--t)}
 .p-natalia{background:var(--n)}
@@ -114,7 +117,7 @@ textarea{min-height:64px;resize:vertical}
  .day{min-height:29mm;padding:4px 5px;flex-direction:column;align-items:stretch;gap:2px;break-inside:avoid}
  .dn{width:auto;font-size:11px;margin:0}.dn .wn{display:none}
  .today .dn .num{background:none;color:inherit;padding:0}
- .pill{font-size:9.5px;padding:2px 4px;border-radius:4px}.pill svg{width:9px;height:9px}
+ .pill{font-size:9.5px;padding:2px 4px;border-radius:4px}.pill svg{width:8px;height:8px}.hn{font-size:9px;margin:0}
  .notes{font-size:9px;width:auto}.notes div{white-space:normal}
  .key{margin-top:6px;font-size:10px}
 }
@@ -137,6 +140,7 @@ textarea{min-height:64px;resize:vertical}
  <div class="key">
   <span><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg> księżyc = zmiana nocna</span>
   <span><span class="pill extra p-kuba"><span class="tm">ekstra</span></span> zmiana dodatkowa</span>
+  <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d42a2a"></span> niedziele i święta – dni wolne od pracy</span>
   <span class="noprint">Kliknij dzień, aby dodać zmianę lub notatkę.</span>
  </div>
 </div>
@@ -183,15 +187,22 @@ let Y=now.getFullYear(),M=now.getMonth(),jumped=false;
 let shifts=[],notes=[],hidden=new Set(),canWrite=true,openDate=null,undo=null;
 try{hidden=new Set(JSON.parse(localStorage.getItem('grafik-hidden')||'[]'))}catch(e){}
 
+const HOL={};
+function holidays(y){if(HOL[y])return HOL[y];
+ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),hh=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-hh-k)%7,m=Math.floor((a+11*hh+22*l)/451),mo=Math.floor((hh+l-7*m+114)/31),da=(hh+l-7*m+114)%31+1;
+ const E=new Date(y,mo-1,da),add=n=>{const t=new Date(E);t.setDate(t.getDate()+n);return ymd(t.getFullYear(),t.getMonth(),t.getDate())};
+ const r={[ymd(y,0,1)]:'Nowy Rok',[ymd(y,0,6)]:'Trzech Króli',[add(0)]:'Wielkanoc',[add(1)]:'Poniedziałek Wielkanocny',[ymd(y,4,1)]:'Święto Pracy',[ymd(y,4,3)]:'Święto Konstytucji 3 Maja',[add(49)]:'Zielone Świątki',[add(60)]:'Boże Ciało',[ymd(y,7,15)]:'Wniebowzięcie NMP',[ymd(y,10,1)]:'Wszystkich Świętych',[ymd(y,10,11)]:'Święto Niepodległości',[ymd(y,11,24)]:'Wigilia',[ymd(y,11,25)]:'Boże Narodzenie',[ymd(y,11,26)]:'Drugi dzień świąt'};
+ return HOL[y]=r}
 const mins=t=>{const[h,m]=String(t||'0:0').split(':').map(Number);return(h||0)*60+(m||0)};
 const dur=s=>{let d=mins(s.end)-mins(s.start);if(d<=0)d+=1440;return d};
 const isNight=s=>mins(s.end)<=mins(s.start)||mins(s.start)>=1200;
 const ft=t=>{const[h,m]=String(t).split(':');return `${Number(h)}:${m}`};
+const fs=t=>{const[h,m]=String(t).split(':');return m==='00'?`${Number(h)}`:`${Number(h)}:${m}`};
 const hrs=m=>{const h=m/60;return(Number.isInteger(h)?h:h.toFixed(1).replace('.',','))+' h'};
 const ord=p=>P.findIndex(x=>x.id===p);
 const dayShifts=d=>shifts.filter(s=>s.date===d).sort((a,b)=>ord(a.person)-ord(b.person)||mins(a.start)-mins(b.start));
 const dayNotes=d=>notes.filter(n=>n.date===d).sort((a,b)=>(a.created||0)-(b.created||0));
-const pill=(s,showName=true)=>`<span class="pill p-${esc(s.person)}${isNight(s)?' night':''}${s.extra?' extra':''}">${isNight(s)?MOON:''}${showName?`<span class="nm">${esc(PN[s.person]||s.person)}</span>`:''}<span class="tm">${esc(ft(s.start))}–${esc(ft(s.end))}${s.extra?' · ekstra':''}</span></span>`;
+const pill=(s,showName=true,full=false)=>`<span class="pill p-${esc(s.person)}${isNight(s)?' night':''}${s.extra?' extra':''}">${isNight(s)?MOON:''}${showName?`<span class="nm">${esc(PN[s.person]||s.person)}</span>`:''}<span class="tm">${!full?`${esc(fs(s.start))}–${esc(fs(s.end))}`:`${esc(ft(s.start))}–${esc(ft(s.end))}`}${s.extra?' · ekstra':''}</span></span>`;
 
 function render(){
  $('title').innerHTML=`Grafik – ${MON[M]} ${Y}<small>Tomek · Natalia · Kuba</small>`;
@@ -199,11 +210,12 @@ function render(){
  $('legend').innerHTML=P.map(p=>{const a=ms.filter(s=>s.person===p.id);const nights=a.filter(isNight).length,ex=a.filter(s=>s.extra).length;
   return `<button class="who${hidden.has(p.id)?' off':''}" data-p="${p.id}" aria-pressed="${!hidden.has(p.id)}"><span class="dot" style="background:${p.c}"></span><span><b>${p.name}</b><span>${a.length} zmian · ${hrs(a.reduce((t,s)=>t+dur(s),0))}${nights?` · ${nights} nocy`:''}${ex?` · ${ex} ekstra`:''}</span></span></button>`}).join('');
  const first=new Date(Y,M,1),off=(first.getDay()+6)%7,days=new Date(Y,M+1,0).getDate();
- let h=WD.map(w=>`<div class="wd">${w}</div>`).join('');
+ let h=WD.map((w,i)=>`<div class="wd${i===6?' sun':''}">${w}</div>`).join('');const HY=holidays(Y);
  for(let i=0;i<off;i++)h+='<div class="day pad"></div>';
  for(let d=1;d<=days;d++){const k=ymd(Y,M,d),dow=new Date(Y,M,d).getDay();
   const sh=dayShifts(k).filter(s=>!hidden.has(s.person)),no=dayNotes(k);
-  h+=`<button class="day${dow===0||dow===6?' we':''}${k===TODAY?' today':''}" data-d="${k}" aria-label="${d} ${MONG[M]}"><div class="dn"><span><span class="num">${d}</span><span class="wn">${WDL[dow]}</span></span></div>${sh.map(s=>pill(s)).join('')}${no.length?`<div class="notes">${no.map(n=>`<div><i style="${n.person?`background:${P[ord(n.person)]?.c}`:''}"></i>${esc(n.text)}</div>`).join('')}</div>`:''}</button>`}
+  const hn=HY[k],hol=dow===0||!!hn;
+  h+=`<button class="day${dow===6?' we':''}${hol?' hol':''}${k===TODAY?' today':''}" data-d="${k}" aria-label="${d} ${MONG[M]}${hn?', '+hn:''}"><div class="dn"><span><span class="num">${d}</span><span class="wn">${WDL[dow]}</span></span></div>${hn?`<div class="hn">${hn}</div>`:''}${sh.map(s=>pill(s)).join('')}${no.length?`<div class="notes">${no.map(n=>`<div><i style="${n.person?`background:${P[ord(n.person)]?.c}`:''}"></i>${esc(n.text)}</div>`).join('')}</div>`:''}</button>`}
  const tail=(7-(off+days)%7)%7;for(let i=0;i<tail;i++)h+='<div class="day pad"></div>';
  $('cal').innerHTML=h;
  if(openDate)renderPanel();
@@ -211,9 +223,9 @@ function render(){
 
 function renderPanel(){
  const d=openDate,dt=new Date(d+'T12:00');
- $('pTitle').textContent=`${WDL[dt.getDay()]}, ${dt.getDate()} ${MONG[dt.getMonth()]}`;
+ const hn=holidays(dt.getFullYear())[d];$('pTitle').textContent=`${WDL[dt.getDay()]}, ${dt.getDate()} ${MONG[dt.getMonth()]}${hn?' – '+hn:''}`;
  const sh=dayShifts(d),no=dayNotes(d);
- $('pShifts').innerHTML=sh.length?sh.map(s=>`<div class="row">${pill(s)}${canWrite?`<button class="btn icon" data-edit="${esc(s.id)}" aria-label="Edytuj">✎</button><button class="btn icon danger" data-del="${esc(s.id)}" aria-label="Usuń">🗑</button>`:''}</div>`).join(''):'<div class="empty">Nikt nie pracuje tego dnia.</div>';
+ $('pShifts').innerHTML=sh.length?sh.map(s=>`<div class="row">${pill(s,true,true)}${canWrite?`<button class="btn icon" data-edit="${esc(s.id)}" aria-label="Edytuj">✎</button><button class="btn icon danger" data-del="${esc(s.id)}" aria-label="Usuń">🗑</button>`:''}</div>`).join(''):'<div class="empty">Nikt nie pracuje tego dnia.</div>';
  $('pNotes').innerHTML=no.length?no.map(n=>`<div class="row"><div class="txt">${esc(n.text)}<small>${n.person?esc(PN[n.person]||''):'ogólna'}</small></div>${canWrite?`<button class="btn icon danger" data-deln="${esc(n.id)}" aria-label="Usuń notatkę">🗑</button>`:''}</div>`).join(''):'<div class="empty">Brak notatek.</div>';
  $('fShift').hidden=$('fNote').hidden=!canWrite;
 }
