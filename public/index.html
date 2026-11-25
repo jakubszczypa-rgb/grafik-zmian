@@ -48,7 +48,7 @@ h1 small{display:block;font-size:15px;font-weight:500;color:var(--mut);letter-sp
 .day.pad{background:var(--wk);pointer-events:none}
 .day.hol{background:light-dark(#fdeeee,#2a1a1c)}.day.hol:hover{background:light-dark(#fbe2e2,#33201f)}
 .day.hol .num{color:#d42a2a}.wd.sun{color:#d42a2a}
-.hn{font-size:11.5px;font-weight:600;color:#d42a2a;line-height:1.2;margin:-2px 0 2px}
+.hn{font-size:11px;font-weight:600;color:#d42a2a;line-height:1.2;text-align:right;margin-left:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .dn{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:2px}
 .dn .wn{display:none;font-weight:500;color:var(--mut);margin-left:6px}
 .today .dn .num{background:var(--ink);color:var(--bg);border-radius:999px;padding:0 8px}.today.hol .dn .num{background:#d42a2a;color:#fff}
@@ -60,6 +60,7 @@ h1 small{display:block;font-size:15px;font-weight:500;color:var(--mut);letter-sp
 .p-tomek{background:var(--t)}
 .p-natalia{background:var(--n)}
 .p-kuba{background:var(--k)}
+.slot{display:flex;flex-direction:column;gap:4px}.pill.ghost{visibility:hidden}
 .pill.extra{box-shadow:inset 0 0 0 2px #fff,0 0 0 2px var(--ink)}
 .notes{margin-top:auto;font-size:12.5px;color:var(--mut);display:flex;flex-direction:column;gap:2px}
 .notes div{display:flex;gap:5px;align-items:baseline;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -93,9 +94,9 @@ textarea{min-height:64px;resize:vertical}
  .legend{grid-template-columns:minmax(0,1fr)}
  .who{min-height:52px;padding:8px 12px}
  .cal{grid-template-columns:minmax(0,1fr)}
- .wd,.day.pad{display:none}
+ .wd,.day.pad,.slot.e{display:none}
  .day{min-height:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 12px}
- .dn{width:100%;justify-content:flex-start}.dn .wn{display:inline}
+ .dn{width:100%}.dn .wn{display:inline}
  .notes{width:100%;margin-top:2px}
  .pill{font-size:14px}
 }
@@ -113,11 +114,12 @@ textarea{min-height:64px;resize:vertical}
  .who.off{display:none}
  .cal{grid-template-columns:repeat(7,minmax(0,1fr));border-radius:6px}
  .wd{display:block;padding:3px 6px;font-size:10px}
+ .slot.e{display:flex}.slot{gap:2px}
  .day.pad{display:block}
  .day{min-height:29mm;padding:4px 5px;flex-direction:column;align-items:stretch;gap:2px;break-inside:avoid}
  .dn{width:auto;font-size:11px;margin:0}.dn .wn{display:none}
  .today .dn .num{background:none;color:inherit;padding:0}
- .pill{font-size:9.5px;padding:2px 4px;border-radius:4px}.pill svg{width:8px;height:8px}.hn{font-size:9px;margin:0}
+ .pill{font-size:9.5px;padding:2px 4px;border-radius:4px}.pill svg{width:8px;height:8px}.hn{font-size:8.5px}
  .notes{font-size:9px;width:auto}.notes div{white-space:normal}
  .key{margin-top:6px;font-size:10px}
 }
@@ -215,7 +217,7 @@ function render(){
  for(let d=1;d<=days;d++){const k=ymd(Y,M,d),dow=new Date(Y,M,d).getDay();
   const sh=dayShifts(k).filter(s=>!hidden.has(s.person)),no=dayNotes(k);
   const hn=HY[k],hol=dow===0||!!hn;
-  h+=`<button class="day${dow===6?' we':''}${hol?' hol':''}${k===TODAY?' today':''}" data-d="${k}" aria-label="${d} ${MONG[M]}${hn?', '+hn:''}"><div class="dn"><span><span class="num">${d}</span><span class="wn">${WDL[dow]}</span></span></div>${hn?`<div class="hn">${hn}</div>`:''}${sh.map(s=>pill(s)).join('')}${no.length?`<div class="notes">${no.map(n=>`<div><i style="${n.person?`background:${P[ord(n.person)]?.c}`:''}"></i>${esc(n.text)}</div>`).join('')}</div>`:''}</button>`}
+  h+=`<button class="day${dow===6?' we':''}${hol?' hol':''}${k===TODAY?' today':''}" data-d="${k}" aria-label="${d} ${MONG[M]}${hn?', '+hn:''}"><div class="dn"><span><span class="num">${d}</span><span class="wn">${WDL[dow]}</span></span>${hn?`<span class="hn">${hn}</span>`:''}</div>${P.filter(p=>!hidden.has(p.id)).map(p=>{const ps=sh.filter(s=>s.person===p.id);return ps.length?`<div class="slot">${ps.map(s=>pill(s)).join('')}</div>`:'<div class="slot e"><span class="pill ghost" aria-hidden="true">&nbsp;</span></div>'}).join('')}${no.length?`<div class="notes">${no.map(n=>`<div><i style="${n.person?`background:${P[ord(n.person)]?.c}`:''}"></i>${esc(n.text)}</div>`).join('')}</div>`:''}</button>`}
  const tail=(7-(off+days)%7)%7;for(let i=0;i<tail;i++)h+='<div class="day pad"></div>';
  $('cal').innerHTML=h;
  if(openDate)renderPanel();
