@@ -101,6 +101,28 @@ h1 .yr{color:var(--mut);font-weight:700}
 .key{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--mut);margin-top:12px;align-items:center}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .sw{display:inline-block;width:12px;height:12px;border-radius:3px}
+/* widok tygodnia */
+.vsw{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.vsw button{min-height:40px;padding:0 14px;border:0;background:none;border-radius:9px;font-weight:600;color:var(--mut)}
+.vsw button[aria-pressed=true]{background:var(--ink);color:var(--card)}
+.wk{display:grid;grid-template-columns:minmax(96px,150px) repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--line);gap:1px}
+.wk>*{background:var(--card)}
+.wh{padding:10px 8px;text-align:center;border:0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.wh b{font-size:20px;line-height:1.1}.wh small{font-size:12px;color:var(--mut);font-weight:600}
+.wh .hn{max-width:100%}
+.wh.hol{background:var(--redbg)}.wh.hol b,.wh.hol small{color:var(--red)}
+.wh.today b{background:var(--ink);color:var(--card);border-radius:999px;padding:0 8px}
+.wh.hol.today b{background:var(--red);color:#fff}
+.wn2{padding:10px 12px;display:flex;align-items:center;gap:10px}
+.wn2 b{display:block;font-size:15px;line-height:1.2}.wn2 small{color:var(--mut);font-size:12.5px}
+.wc{border:0;padding:8px 6px;min-height:64px;display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:4px;text-align:center}
+.wc:hover{background:var(--soft)}
+.wc.hol{background:var(--redbg)}.wc.sat{background:var(--sat)}
+.wc .pill{justify-content:center;font-size:14px;padding:7px 6px;border-radius:8px}
+.wc .off{color:var(--mut);font-size:14px;opacity:.6}
+.wc.nts{justify-content:flex-start;text-align:left;font-size:12.5px;gap:4px;min-height:52px}
+.wk .past{opacity:.5}
+.wcorner{display:flex;align-items:flex-end;padding:10px 12px;font-size:12px;color:var(--mut);font-weight:700}
 /* panel dnia */
 .ov{position:fixed;inset:0;background:rgb(10 10 12/.45);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));z-index:10}
 .ov.on{display:flex}
@@ -137,6 +159,15 @@ textarea{min-height:70px;resize:vertical}
 .toast.on{display:flex}
 .toast button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;min-height:36px;padding:0 12px;font-weight:700}
 @media(max-width:760px){
+ .wk{grid-template-columns:52px repeat(7,minmax(0,1fr));border-radius:12px}
+ .wn2{padding:6px;flex-direction:column;gap:3px;justify-content:center}.wn2 .av{width:26px;height:26px;font-size:12px}.wn2 b{font-size:11px}.wn2 small,.wn2 .nm2{display:none}
+ .wh{padding:6px 2px}.wh b{font-size:15px}.wh small{font-size:10.5px}.wh .hn{display:none}
+ .wc{padding:4px 2px;min-height:56px}
+ .wc .pill{font-size:11px;padding:6px 2px;border-radius:6px;flex-direction:column;gap:0;line-height:1.15}.wc .pill svg{width:9px;height:9px}
+ .wc.nts{font-size:10.5px;padding:4px 3px}.wc.nts .nt span{display:none}.wc.nts .nt{justify-content:center}
+ .wcorner{padding:4px;font-size:10px}
+ .nav{width:100%}.vsw{flex:1 1 100%}.vsw button{flex:1}.nav .seg{flex:1 1 auto;min-width:max-content}.nav .seg button{flex:1}
+
  header{align-items:center;margin-bottom:14px}
  h1{font-size:30px}
  .now{grid-template-columns:minmax(0,1fr);gap:8px}
@@ -161,6 +192,8 @@ textarea{min-height:70px;resize:vertical}
 body.allpast .day.past{display:flex}
 @media(prefers-reduced-motion:no-preference){.panel{animation:up .2s ease-out}@keyframes up{from{transform:translateY(14px);opacity:0}}}
 @media print{
+ .vsw{display:none!important}
+ .wk{border-radius:6px}.wc{min-height:40px}.wh.today b{background:none;color:inherit}
  @page{size:A4 landscape;margin:8mm}
  :root,:root[data-theme=dark]{color-scheme:light}
  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -189,6 +222,7 @@ body.allpast .day.past{display:flex}
  <header>
   <div><p class="eyebrow">Grafik zmian · Tomek, Natalia, Kuba</p><h1 id="title">Grafik</h1></div>
   <div class="nav">
+   <div class="vsw" role="group" aria-label="Widok"><button id="vMonth" aria-pressed="true">Miesiąc</button><button id="vWeek" aria-pressed="false">Tydzień</button></div>
    <div class="seg"><button id="prev" aria-label="Poprzedni miesiąc">‹</button><button id="todayBtn">Dziś</button><button id="next" aria-label="Następny miesiąc">›</button></div>
    <button class="btn pri" id="printBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7"/></svg>Drukuj</button>
   </div>
@@ -197,6 +231,7 @@ body.allpast .day.past{display:flex}
  <div class="legend" id="legend"></div>
  <div class="status" id="status" role="status">Łączenie z grafikiem…</div>
  <div class="cal" id="cal"></div>
+ <div class="wk" id="wk" hidden></div>
  <button class="btn showpast" id="showPast">Pokaż wcześniejsze dni</button>
  <div class="key">
   <span><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg> zmiana nocna</span>
@@ -250,6 +285,10 @@ const ymd=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
 const now=new Date();const TODAY=ymd(now.getFullYear(),now.getMonth(),now.getDate());
 const tm=new Date(now);tm.setDate(tm.getDate()+1);const TOMORROW=ymd(tm.getFullYear(),tm.getMonth(),tm.getDate());
 let Y=now.getFullYear(),M=now.getMonth(),jumped=false;
+let VIEW='month';try{if(localStorage.getItem('grafik-view')==='week')VIEW='week'}catch(e){}
+const monday=d=>{const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());t.setDate(t.getDate()-((t.getDay()+6)%7));return t};
+let WS=monday(now);
+const kOf=d=>ymd(d.getFullYear(),d.getMonth(),d.getDate());
 let shifts=[],notes=[],hidden=new Set(),openDate=null,undo=null,sPerson='tomek',nSel=new Set();
 try{hidden=new Set(JSON.parse(localStorage.getItem('grafik-hidden')||'[]'))}catch(e){}
 
@@ -282,9 +321,26 @@ function nowCard(k,label){
  ${sh.length?`<div class="row1">${sh.map(pill).join('')}</div>`:'<div class="free">Nikt nie pracuje</div>'}
  ${no.length?`<div class="nl">${no.map(n=>`<div class="nt"><i class="dot" style="background:${dotBg(persons(n))}"></i><span>${esc(n.text)}</span></div>`).join('')}</div>`:''}</button>`}
 
+function renderWeek(){
+ const days=[...Array(7)].map((_,i)=>{const d=new Date(WS);d.setDate(d.getDate()+i);return d}),ks=days.map(kOf),vis=P.filter(p=>!hidden.has(p.id));
+ const a=days[0],b=days[6];
+ $('title').innerHTML=a.getMonth()===b.getMonth()?`${a.getDate()}–${b.getDate()} ${MONG[b.getMonth()]} <span class="yr">${b.getFullYear()}</span>`:`${a.getDate()} ${MONG[a.getMonth()].slice(0,3)} – ${b.getDate()} ${MONG[b.getMonth()].slice(0,3)} <span class="yr">${b.getFullYear()}</span>`;
+ const wsh=shifts.filter(s=>ks.includes(s.date));
+ $('legend').innerHTML=P.map(p=>{const x=wsh.filter(s=>s.person===p.id),h=hrs(x.reduce((t,s)=>t+dur(s),0));return `<button class="who${hidden.has(p.id)?' off':''}" data-p="${p.id}" aria-pressed="${!hidden.has(p.id)}">${avatar(p.id)}<span><b>${p.name}</b><span class="st lg">w tym tygodniu: ${pl(x.length,'zmiana','zmiany','zmian')} · ${h}</span><span class="st sm">${h} · ${x.length} zm.</span></span></button>`}).join('');
+ let h='<div class="wcorner">Tydzień</div>'+days.map((d,i)=>{const k=ks[i],hn=holName(k),hol=d.getDay()===0||!!hn;return `<button class="wh${hol?' hol':''}${k===TODAY?' today':''}${k<TODAY?' past':''}" data-d="${k}" style="border:0"><small>${WD[i]}</small><b>${d.getDate()}</b>${hn?`<span class="hn">${esc(hn)}</span>`:''}</button>`}).join('');
+ for(const p of vis){const x=wsh.filter(s=>s.person===p.id);
+  h+=`<div class="wn2">${avatar(p.id)}<span><b>${p.name}</b><small>${hrs(x.reduce((t,s)=>t+dur(s),0))}</small></span></div>`;
+  h+=days.map((d,i)=>{const k=ks[i],hn=holName(k),ps=dayShifts(k).filter(s=>s.person===p.id);return `<button class="wc${d.getDay()===0||hn?' hol':d.getDay()===6?' sat':''}${k<TODAY?' past':''}" data-d="${k}">${ps.length?ps.map(pillW).join(''):'<span class="off">–</span>'}</button>`}).join('')}
+ h+='<div class="wn2"><span><b>Notatki</b></span></div>'+days.map((d,i)=>{const k=ks[i],no=dayNotes(k);return `<button class="wc nts${k<TODAY?' past':''}" data-d="${k}">${no.map(n=>`<div class="nt"><i class="dot" style="background:${dotBg(persons(n))}"></i><span>${esc(n.text)}</span></div>`).join('')}</button>`}).join('');
+ $('wk').innerHTML=h;
+}
+const pillW=s=>`<span class="pill p-${esc(s.person)}${s.extra?' extra':''}">${isNight(s)?MOON:''}<span class="tm">${esc(fs(s.start))}–${esc(fs(s.end))}</span></span>`;
 function render(){
- $('title').innerHTML=`${MON[M][0].toUpperCase()+MON[M].slice(1)} <span class="yr">${Y}</span>`;
+ $('vMonth').setAttribute('aria-pressed',VIEW==='month');$('vWeek').setAttribute('aria-pressed',VIEW==='week');
+ $('cal').hidden=VIEW!=='month';$('wk').hidden=VIEW!=='week';
  $('now').innerHTML=nowCard(TODAY,'Dziś')+nowCard(TOMORROW,'Jutro');
+ if(VIEW==='week'){$('showPast').hidden=true;renderWeek();if(openDate)renderPanel();return}
+ $('title').innerHTML=`${MON[M][0].toUpperCase()+MON[M].slice(1)} <span class="yr">${Y}</span>`;
  const pre=`${Y}-${pad(M+1)}-`,ms=shifts.filter(s=>s.date.startsWith(pre));
  $('legend').innerHTML=P.map(p=>{const a=ms.filter(s=>s.person===p.id),h=hrs(a.reduce((t,s)=>t+dur(s),0)),nights=a.filter(isNight).length,ex=a.filter(s=>s.extra).length;
   return `<button class="who${hidden.has(p.id)?' off':''}" data-p="${p.id}" aria-pressed="${!hidden.has(p.id)}">${avatar(p.id)}<span><b>${p.name}</b><span class="st lg">${pl(a.length,'zmiana','zmiany','zmian')} · ${h}${nights?` · ${pl(nights,'noc','noce','nocy')}`:''}${ex?` · ${ex} ekstra`:''}</span><span class="st sm">${h} · ${a.length} zm.</span></span></button>`}).join('');
@@ -358,9 +414,12 @@ $('tUndo').onclick=()=>{$('toast').classList.remove('on');if(undo)undo();undo=nu
 $('cal').onclick=e=>{const b=e.target.closest('.day[data-d]');if(b)openDay(b.dataset.d)};
 $('now').onclick=e=>{const b=e.target.closest('[data-d]');if(b)openDay(b.dataset.d)};
 $('legend').onclick=e=>{const b=e.target.closest('.who');if(!b)return;const p=b.dataset.p;hidden.has(p)?hidden.delete(p):hidden.add(p);try{localStorage.setItem('grafik-hidden',JSON.stringify([...hidden]))}catch(e){}render()};
-$('prev').onclick=()=>{M--;if(M<0){M=11;Y--}render()};
-$('next').onclick=()=>{M++;if(M>11){M=0;Y++}render()};
-$('todayBtn').onclick=()=>{Y=now.getFullYear();M=now.getMonth();render();scrollTo({top:0,behavior:'smooth'})};
+$('prev').onclick=()=>{if(VIEW==='week'){WS.setDate(WS.getDate()-7);render();return}M--;if(M<0){M=11;Y--}render()};
+$('next').onclick=()=>{if(VIEW==='week'){WS.setDate(WS.getDate()+7);render();return}M++;if(M>11){M=0;Y++}render()};
+const setView=v=>{if(v===VIEW)return;if(v==='week'){const f=new Date(Y,M,1);WS=(Y===now.getFullYear()&&M===now.getMonth())?monday(now):monday(f)}else{const m=new Date(WS);m.setDate(m.getDate()+3);Y=m.getFullYear();M=m.getMonth()}VIEW=v;try{localStorage.setItem('grafik-view',v)}catch(e){}render()};
+$('vMonth').onclick=()=>setView('month');$('vWeek').onclick=()=>setView('week');
+$('wk').onclick=e=>{const b=e.target.closest('[data-d]');if(b)openDay(b.dataset.d)};
+$('todayBtn').onclick=()=>{Y=now.getFullYear();M=now.getMonth();WS=monday(now);render();scrollTo({top:0,behavior:'smooth'})};
 $('showPast').onclick=()=>{document.body.classList.add('allpast');render()};
 $('printBtn').onclick=()=>window.print();
 
