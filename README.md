@@ -8,4 +8,7 @@ Edytowalny grafik pracy online dla Tomka, Natalii i Kuby.
 
 ## Konfiguracja
 - Vercel Blob podłączony do projektu (zmienna `BLOB_READ_WRITE_TOKEN`).
-- Opcjonalnie `GRAFIK_PIN` – jeśli ustawiona, edycja i podgląd wymagają podania PIN-u.
+- `GRAFIK_TOKEN_FULL` – klucz pełnego widoku (link `/?k=...` dla Natalii i Kuby).
+- `GRAFIK_TOKEN_TOMEK` – klucz widoku Tomka: widzi wszystkie zmiany, ale tylko notatki ogólne i swoje. Filtrowanie odbywa się na serwerze.
+- Bez ważnego klucza API zwraca 401.
+- `/api/selftest?k=<pełny klucz>` – test zapisu do magazynu i ukrywania notatek.

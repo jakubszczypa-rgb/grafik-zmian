@@ -1,5 +1,6 @@
 import { put, list, del } from '@vercel/blob';
 import { SEED } from './_seed.js';
+import { roleFor, noteVisible } from './_auth.js';
 
 // Stan grafiku trzymany jako kolejne pliki JSON w Vercel Blob.
 // Każdy zapis tworzy nowy plik (unikalny URL = brak problemów z cache CDN),
@@ -55,12 +56,13 @@ function clean(kind, d) {
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  const pin = process.env.GRAFIK_PIN;
-  if (pin && req.headers['x-pin'] !== pin) return res.status(401).json({ error: 'pin' });
+  const role = roleFor(req.headers['x-key']);
+  if (!role) return res.status(401).json({ error: 'key' });
+  const view = st => ({ shifts: st.shifts || [], notes: (st.notes || []).filter(n => noteVisible(role, n)), role, updated: st.updated || 0 });
   try {
     if (req.method === 'GET') {
       const { state } = await load();
-      return res.status(200).json(state);
+      return res.status(200).json(view(state));
     }
     if (req.method === 'POST') {
       const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
@@ -69,16 +71,19 @@ export default async function handler(req, res) {
       const { state, v } = await load();
       const listK = state[kind] || (state[kind] = []);
       const i = listK.findIndex(x => x.id === id);
+      // Widok ograniczony nie może ruszać notatek, których nie widzi
+      if (kind === 'notes' && i >= 0 && !noteVisible(role, listK[i])) return res.status(403).json({ error: 'forbidden' });
       if (action === 'delete') {
         if (i >= 0) listK.splice(i, 1);
       } else if (action === 'set') {
         const d = clean(kind, b.data);
         if (!d) return res.status(400).json({ error: 'invalid data' });
+        if (kind === 'notes' && !noteVisible(role, d)) return res.status(403).json({ error: 'forbidden' });
         if (i >= 0) listK[i] = { id, ...d }; else listK.push({ id, ...d });
       } else return res.status(400).json({ error: 'bad action' });
       state.updated = Date.now();
       await save(state, v);
-      return res.status(200).json(state);
+      return res.status(200).json(view(state));
     }
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).end();

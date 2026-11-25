@@ -9,7 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grafik">
-<link rel="manifest" href="/manifest.webmanifest">
+<script>{let k='';try{k=new URLSearchParams(location.search).get('k')||localStorage.getItem('grafik-key')||''}catch(e){}
+const l=document.createElement('link');l.rel='manifest';l.href=k?'/api/manifest?k='+encodeURIComponent(k):'/manifest.webmanifest';document.head.appendChild(l)}</script>
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/icons/favicon.png">
 <title>Grafik zmian</title>
@@ -182,7 +183,7 @@ textarea{min-height:64px;resize:vertical}
   </form>
  </div>
 </div>
-<div class="ov" id="pinOv"><form class="panel" id="pinF" style="max-width:360px"><h2>Podaj PIN</h2><label>PIN do grafiku<input id="pinIn" type="password" inputmode="numeric" autocomplete="current-password" required></label><button class="btn pri">Otwórz grafik</button></form></div>
+<div class="ov" id="keyOv"><div class="panel" style="max-width:380px"><h2>Brak dostępu</h2><p>Ten grafik otwiera się tylko z Twojego osobistego linku. Poproś o link i otwórz go ponownie.</p></div></div>
 <div class="toast" id="toast" role="status"><span id="tMsg"></span><button id="tUndo">Cofnij</button></div>
 
 <script>
@@ -250,23 +251,23 @@ function closeDay(){openDate=null;$('ov').classList.remove('on');$('ov').setAttr
 function resetShiftForm(){$('sId').value='';$('sSave').textContent='Dodaj zmianę';$('sCancel').hidden=true;$('sExtra').checked=false}
 const DEF={tomek:['06:00','14:00'],natalia:['07:00','19:00'],kuba:['08:00','20:00']};
 $('sPerson').innerHTML=P.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-$('nPerson').innerHTML+=P.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+
 $('sPerson').onchange=()=>{if(!$('sId').value){const[a,b]=DEF[$('sPerson').value];$('sStart').value=a;$('sEnd').value=b}};
 
 function toast(msg,fn){$('tMsg').textContent=msg;undo=fn;$('tUndo').hidden=!fn;$('toast').classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('on'),6000)}
-function fail(e){if(e&&e.code==='pin')return;toast('Nie udało się zapisać. Sprawdź internet i spróbuj ponownie.')}
-let PIN='';try{PIN=localStorage.getItem('grafik-pin')||''}catch(e){}
+function fail(e){if(e&&e.code==='key')return;if(e&&e.code==='forbidden'){toast('Nie masz uprawnień do tej notatki.');return}toast('Nie udało się zapisać. Sprawdź internet i spróbuj ponownie.')}
+let KEY='',ROLE='';try{const q=new URLSearchParams(location.search).get('k');if(q){KEY=q;localStorage.setItem('grafik-key',q)}else KEY=localStorage.getItem('grafik-key')||''}catch(e){}
 const newId=()=>((crypto.randomUUID&&crypto.randomUUID())||Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);
-function apply(st,fromCache){if(!fromCache){try{localStorage.setItem('grafik-last',JSON.stringify(st))}catch(e){}}
+function apply(st,fromCache){if(st.role&&st.role!==ROLE){ROLE=st.role;setRole()}if(!fromCache){try{localStorage.setItem('grafik-last',JSON.stringify(st))}catch(e){}}
  shifts=(st.shifts||[]).filter(x=>typeof x.date==='string');notes=(st.notes||[]).filter(x=>typeof x.date==='string');
  if(!jumped&&shifts.length){jumped=true;const cur=`${Y}-${pad(M+1)}`;if(!shifts.some(x=>x.date.startsWith(cur))){const f=shifts.map(x=>x.date).filter(x=>x>=cur).sort()[0]||shifts.map(x=>x.date).sort()[0];Y=+f.slice(0,4);M=+f.slice(5,7)-1}}
  render()}
-function askPin(){$('pinOv').classList.add('on');$('pinIn').value='';$('pinIn').focus()}
-async function req(method,body){const r=await fetch('/api/data',{method,cache:'no-store',headers:{'content-type':'application/json','x-pin':PIN},body:body&&JSON.stringify(body)});
- if(r.status===401){askPin();throw{code:'pin'}}if(!r.ok)throw{code:'http'};apply(await r.json())}
+function noKey(){$('keyOv').classList.add('on');shifts=[];notes=[];try{localStorage.removeItem('grafik-last')}catch(e){}render()}
+function setRole(){const opts=ROLE==='tomek'?P.filter(p=>p.id==='tomek'):P;$('nPerson').innerHTML='<option value="">Wszystkich / ogólna</option>'+opts.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+async function req(method,body){const r=await fetch('/api/data',{method,cache:'no-store',headers:{'content-type':'application/json','x-key':KEY},body:body&&JSON.stringify(body)});
+ if(r.status===401){noKey();throw{code:'key'}}if(r.status===403)throw{code:'forbidden'};if(!r.ok)throw{code:'http'};apply(await r.json())}
 const api=(action,kind,id,data)=>req('POST',{action,kind,id,data});
-async function load(){try{await req('GET');$('status').textContent='Zmiany zapisują się automatycznie i są widoczne dla wszystkich z linkiem.'}catch(e){if(e.code!=='pin')$('status').textContent=shifts.length?'Brak internetu – pokazuję ostatnio pobrany grafik. Edycja wróci po połączeniu.':'Nie można pobrać grafiku – sprawdź połączenie.'}}
-$('pinF').onsubmit=e=>{e.preventDefault();PIN=$('pinIn').value.trim();try{localStorage.setItem('grafik-pin',PIN)}catch(e){}$('pinOv').classList.remove('on');load()};
+async function load(){try{await req('GET');$('status').textContent='Zmiany zapisują się automatycznie i są widoczne dla wszystkich z linkiem.'}catch(e){if(e.code!=='key')$('status').textContent=shifts.length?'Brak internetu – pokazuję ostatnio pobrany grafik. Edycja wróci po połączeniu.':'Nie można pobrać grafiku – sprawdź połączenie.'}}
 
 $('fShift').onsubmit=async e=>{e.preventDefault();
  const id=$('sId').value,body={date:openDate,person:$('sPerson').value,start:$('sStart').value,end:$('sEnd').value,extra:$('sExtra').checked};
@@ -294,13 +295,15 @@ $('todayBtn').onclick=()=>{Y=now.getFullYear();M=now.getMonth();render()};
 
 $('printBtn').onclick=()=>window.print();
 
-try{const c=JSON.parse(localStorage.getItem('grafik-last')||'null');if(c)apply(c,true)}catch(e){}
+setRole();
+if(!KEY)noKey();else try{const c=JSON.parse(localStorage.getItem('grafik-last')||'null');if(c)apply(c,true)}catch(e){}
 render();
 let scrolled=false;const goToday=()=>{if(scrolled||innerWidth>760)return;const t=document.querySelector('.day.today');if(t){scrolled=true;t.scrollIntoView({block:'center'})}};
-load().then(goToday);
+if(KEY)load().then(goToday);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
-setInterval(()=>{if(document.visibilityState==='visible')load()},20000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
+setInterval(()=>{if(KEY&&document.visibilityState==='visible'&&!document.querySelector('#ov.on input:focus,#ov.on textarea:focus'))load()},15000);
+document.addEventListener('visibilitychange',()=>{if(KEY&&document.visibilityState==='visible')load()});
+addEventListener('focus',()=>{if(KEY)load()});
 }
 </script>
 </body>
