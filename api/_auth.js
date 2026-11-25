@@ -10,8 +10,11 @@ export function roleFor(key) {
 }
 
 // Które notatki widzi dana rola
+export const notePersons = n => Array.isArray(n.persons) ? n.persons : (n.person ? [n.person] : []);
+
 export function noteVisible(role, note) {
   if (role === 'full') return true;
-  if (role === 'tomek') return !note.person || note.person === 'tomek';
+  const ps = notePersons(note);
+  if (role === 'tomek') return ps.length === 0 || ps.includes('tomek');
   return false;
 }

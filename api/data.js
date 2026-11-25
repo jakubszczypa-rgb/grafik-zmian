@@ -50,8 +50,10 @@ function clean(kind, d) {
     return { date: d.date, person: d.person, start: d.start, end: d.end, extra: !!d.extra };
   }
   const text = String(d.text || '').trim().slice(0, 300);
-  if (!text || (d.person && !PEOPLE.includes(d.person))) return null;
-  return { date: d.date, person: d.person || '', text, created: Number(d.created) || Date.now() };
+  const raw = Array.isArray(d.persons) ? d.persons : (d.person ? [d.person] : []);
+  if (!text || raw.some(p => !PEOPLE.includes(p))) return null;
+  const persons = PEOPLE.filter(p => raw.includes(p)); // bez duplikatów, stała kolejność
+  return { date: d.date, persons, text, created: Number(d.created) || Date.now() };
 }
 
 export default async function handler(req, res) {
