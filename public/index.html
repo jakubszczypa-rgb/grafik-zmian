@@ -9,12 +9,12 @@
 <style>
 /* VOICE: spokojny, rzeczowy grafik zmian wiszący na lodówce – czytelny w sekundę
    IDEA: papierowy kalendarz zmian z kolorowymi paskami osób
-   PICTURE: sam kalendarz miesiąca – zmiany jako kolorowe pigułki, noce ciemne z księżycem
-   COLOUR and TYPE: biel / głęboki grafit nocą; Tomek niebieski, Natalia malinowa, Kuba bursztyn; Figtree
+   PICTURE: sam kalendarz miesiąca – zmiany jako jednolite kolorowe pigułki, noc oznaczona tylko księżycem
+   COLOUR and TYPE: biel / głęboki grafit nocą; Tomek zielony, Natalia różowa, Kuba niebieski (jednolite); Figtree
    LAYOUT: skromny tytuł + nawigacja miesiąca, legenda z sumami godzin, kalendarz 7 kolumn; na telefonie lista dni */
 :root{color-scheme:light dark;--bg:light-dark(#ffffff,#141518);--ink:light-dark(#16171a,#eceef2);--mut:light-dark(#62656d,#a3a7b0);
 --line:light-dark(#e4e5e9,#2a2c31);--cell:light-dark(#ffffff,#1a1b1f);--wk:light-dark(#f5f6f8,#17181c);--soft:light-dark(#f1f2f5,#22242a);
---t:#2f6fe4;--n:#d93a72;--k:#d08a00;--tt:light-dark(#e3ecfd,#1c2a45);--nt:light-dark(#fce4ed,#3d1d2a);--kt:light-dark(#fdf0d4,#3a2d12);
+--t:#1f8a4c;--n:#d6408f;--k:#2563d9;
 --focus:#2f6fe4}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
@@ -49,18 +49,15 @@ h1 small{display:block;font-size:15px;font-weight:500;color:var(--mut);letter-sp
 .dn{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:2px}
 .dn .wn{display:none;font-weight:500;color:var(--mut);margin-left:6px}
 .today .dn .num{background:var(--ink);color:var(--bg);border-radius:999px;padding:0 8px}
-.pill{display:flex;align-items:center;gap:5px;font-size:13px;line-height:1.25;padding:3px 7px;border-radius:7px;font-weight:600;white-space:nowrap;overflow:hidden}
+.pill{display:flex;flex-wrap:wrap;align-items:center;gap:1px 5px;font-size:13px;line-height:1.25;padding:3px 7px;border-radius:7px;font-weight:600}
 .pill .nm{font-weight:800}
-.pill .tm{font-variant-numeric:tabular-nums;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.pill .tm{font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
 .pill svg{flex:none;width:12px;height:12px}
-.p-tomek{background:var(--tt);color:light-dark(#1a4bb0,#9bbcff)}
-.p-natalia{background:var(--nt);color:light-dark(#a3204f,#ff9cc0)}
-.p-kuba{background:var(--kt);color:light-dark(#8a5b00,#ffd27a)}
-.pill.night.p-tomek{background:var(--t);color:#fff}
-.pill.night.p-natalia{background:var(--n);color:#fff}
-.pill.night.p-kuba{background:var(--k);color:#1b1300}
-.pill.extra{box-shadow:inset 0 0 0 2px currentColor}
-.pill.extra.night{box-shadow:inset 0 0 0 2px light-dark(#16171a,#fff)}
+.pill{color:#fff}
+.p-tomek{background:var(--t)}
+.p-natalia{background:var(--n)}
+.p-kuba{background:var(--k)}
+.pill.extra{box-shadow:inset 0 0 0 2px #fff,0 0 0 2px var(--ink)}
 .notes{margin-top:auto;font-size:12.5px;color:var(--mut);display:flex;flex-direction:column;gap:2px}
 .notes div{display:flex;gap:5px;align-items:baseline;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .notes i{font-style:normal;width:7px;height:7px;border-radius:50%;flex:none;background:var(--mut);transform:translateY(-1px)}
@@ -100,14 +97,27 @@ textarea{min-height:64px;resize:vertical}
  .pill{font-size:14px}
 }
 @media(prefers-reduced-motion:no-preference){.panel{animation:up .18s ease-out}@keyframes up{from{transform:translateY(10px);opacity:0}}}
-#printArea{display:none}
-@media print{@page{size:A4 portrait;margin:10mm}
- body{background:#fff;color:#000;font:10pt/1.3 Arial,Helvetica,sans-serif}
- body>*:not(#printArea){display:none!important}#printArea{display:block}
- #printArea h1{font-size:17pt;margin:0 0 6px}#printArea table{width:100%;border-collapse:collapse;table-layout:fixed}
- #printArea th,#printArea td{border:1px solid #999;padding:2px 5px;vertical-align:top;font-size:9.5pt}#printArea th{background:#e6e6e6;text-align:left}
- #printArea td.d{width:13%;white-space:nowrap}#printArea .no{width:30%;font-size:9pt}#printArea tr.we td{background:#f0f0f0}#printArea .n{font-weight:bold}
- #printArea tfoot td{background:#e6e6e6}#printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}#printArea .leg{font-size:8.5pt;margin:4px 0 0}}
+@media print{
+ @page{size:A4 landscape;margin:8mm}
+ :root,:root[data-theme=dark]{color-scheme:light}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ body{background:#fff;color:#16171a;font-size:11px}
+ .nav,.status,.noprint,.ov,.toast{display:none!important}
+ .wrap{max-width:none;padding:0}
+ header{margin-bottom:6px}h1{font-size:22px}h1 small{display:none}
+ .legend{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px}
+ .who{min-height:0;padding:4px 8px;border-radius:8px}.who b{font-size:12px;display:inline;margin-right:6px}.who span{font-size:10px}
+ .who.off{display:none}
+ .cal{grid-template-columns:repeat(7,minmax(0,1fr));border-radius:6px}
+ .wd{display:block;padding:3px 6px;font-size:10px}
+ .day.pad{display:block}
+ .day{min-height:29mm;padding:4px 5px;flex-direction:column;align-items:stretch;gap:2px;break-inside:avoid}
+ .dn{width:auto;font-size:11px;margin:0}.dn .wn{display:none}
+ .today .dn .num{background:none;color:inherit;padding:0}
+ .pill{font-size:9.5px;padding:2px 4px;border-radius:4px}.pill svg{width:9px;height:9px}
+ .notes{font-size:9px;width:auto}.notes div{white-space:normal}
+ .key{margin-top:6px;font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -125,10 +135,9 @@ textarea{min-height:64px;resize:vertical}
  <div class="status" id="status" role="status">Łączenie z grafikiem…</div>
  <div class="cal" id="cal"></div>
  <div class="key">
-  <span><span class="pill p-tomek"><span class="tm">6:00–14:00</span></span> zmiana dzienna</span>
-  <span><span class="pill night p-tomek"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg><span class="tm">22:00–6:00</span></span> zmiana nocna</span>
-  <span><span class="pill extra p-tomek"><span class="tm">+ ekstra</span></span> zmiana dodatkowa</span>
-  <span>Kliknij dzień, aby dodać zmianę lub notatkę.</span>
+  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg> księżyc = zmiana nocna</span>
+  <span><span class="pill extra p-kuba"><span class="tm">ekstra</span></span> zmiana dodatkowa</span>
+  <span class="noprint">Kliknij dzień, aby dodać zmianę lub notatkę.</span>
  </div>
 </div>
 
@@ -154,7 +163,6 @@ textarea{min-height:64px;resize:vertical}
  </div>
 </div>
 <div class="ov" id="pinOv"><form class="panel" id="pinF" style="max-width:360px"><h2>Podaj PIN</h2><label>PIN do grafiku<input id="pinIn" type="password" inputmode="numeric" autocomplete="current-password" required></label><button class="btn pri">Otwórz grafik</button></form></div>
-<div id="printArea"></div>
 <div class="toast" id="toast" role="status"><span id="tMsg"></span><button id="tUndo">Cofnij</button></div>
 
 <script>
@@ -255,17 +263,7 @@ $('prev').onclick=()=>{M--;if(M<0){M=11;Y--}render()};
 $('next').onclick=()=>{M++;if(M>11){M=0;Y++}render()};
 $('todayBtn').onclick=()=>{Y=now.getFullYear();M=now.getMonth();render()};
 
-function printDoc(){
- const days=new Date(Y,M+1,0).getDate(),pre=`${Y}-${pad(M+1)}-`;
- const cell=s=>`<div class="${isNight(s)?'n':''}">${isNight(s)?'☾ ':''}${esc(ft(s.start))}–${esc(ft(s.end))}${s.extra?' <b>(ekstra)</b>':''}</div>`;
- let rows='';
- for(let d=1;d<=days;d++){const k=ymd(Y,M,d),dow=new Date(Y,M,d).getDay(),sh=dayShifts(k),no=dayNotes(k);
-  rows+=`<tr class="${dow===0||dow===6?'we':''}"><td class="d"><b>${d}</b> ${WD[(dow+6)%7]}</td>${P.map(p=>`<td>${sh.filter(s=>s.person===p.id).map(cell).join('')}</td>`).join('')}<td class="no">${no.map(n=>`${n.person?`<b>${esc(PN[n.person]||'')}:</b> `:''}${esc(n.text)}`).join('<br>')}</td></tr>`}
- const tot=P.map(p=>{const a=shifts.filter(s=>s.date.startsWith(pre)&&s.person===p.id);return `<td><b>${a.length} zm. · ${hrs(a.reduce((t,s)=>t+dur(s),0))}</b></td>`}).join('');
- return `<h1>Grafik – ${MON[M]} ${Y}</h1><table><thead><tr><th class="d">Dzień</th>${P.map(p=>`<th>${p.name}</th>`).join('')}<th class="no">Notatki</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Razem</td>${tot}<td></td></tr></tfoot></table><p class="leg">☾ i pogrubienie = zmiana nocna · (ekstra) = zmiana dodatkowa</p>`;
-}
-$('printBtn').onclick=()=>{$('printArea').innerHTML=printDoc();window.print()};
-window.addEventListener('afterprint',()=>{$('printArea').innerHTML=''});
+$('printBtn').onclick=()=>window.print();
 
 render();
 load();
