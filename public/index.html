@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafik zmian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: spokojny, rzeczowy grafik zmian wiszący na lodówce – czytelny w sekundę
+   IDEA: papierowy kalendarz zmian z kolorowymi paskami osób
+   PICTURE: sam kalendarz miesiąca – zmiany jako kolorowe pigułki, noce ciemne z księżycem
+   COLOUR and TYPE: biel / głęboki grafit nocą; Tomek niebieski, Natalia malinowa, Kuba bursztyn; Figtree
+   LAYOUT: skromny tytuł + nawigacja miesiąca, legenda z sumami godzin, kalendarz 7 kolumn; na telefonie lista dni */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#141518);--ink:light-dark(#16171a,#eceef2);--mut:light-dark(#62656d,#a3a7b0);
+--line:light-dark(#e4e5e9,#2a2c31);--cell:light-dark(#ffffff,#1a1b1f);--wk:light-dark(#f5f6f8,#17181c);--soft:light-dark(#f1f2f5,#22242a);
+--t:#2f6fe4;--n:#d93a72;--k:#d08a00;--tt:light-dark(#e3ecfd,#1c2a45);--nt:light-dark(#fce4ed,#3d1d2a);--kt:light-dark(#fdf0d4,#3a2d12);
+--focus:#2f6fe4}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,36px) max(4vw,14px) 48px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:18px}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.05;margin:0;font-weight:800;letter-spacing:-.02em;text-wrap:balance;flex:1 1 auto}
+h1 small{display:block;font-size:15px;font-weight:500;color:var(--mut);letter-spacing:0;margin-top:6px}
+.nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--cell);font-weight:600;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.icon{width:44px;padding:0;justify-content:center}
+.btn.danger{color:#c62828}
+.legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.who{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--cell);text-align:left;min-height:64px}
+.who .dot{width:14px;height:14px;border-radius:50%;flex:none}
+.who b{display:block;font-size:17px}
+.who span{color:var(--mut);font-size:14px}
+.who.off{opacity:.45}
+.who.off b{text-decoration:line-through}
+.status{font-size:14px;color:var(--mut);margin:-6px 0 12px;min-height:1.5em}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--line);gap:1px}
+.wd{background:var(--wk);padding:8px 10px;font-size:13px;font-weight:700;color:var(--mut)}
+.day{background:var(--cell);min-height:128px;padding:8px;display:flex;flex-direction:column;gap:4px;text-align:left;border:0;border-radius:0;position:relative}
+.day:hover{background:var(--soft)}
+.day.we{background:var(--wk)}.day.we:hover{background:var(--soft)}
+.day.pad{background:var(--wk);pointer-events:none}
+.dn{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:2px}
+.dn .wn{display:none;font-weight:500;color:var(--mut);margin-left:6px}
+.today .dn .num{background:var(--ink);color:var(--bg);border-radius:999px;padding:0 8px}
+.pill{display:flex;align-items:center;gap:5px;font-size:13px;line-height:1.25;padding:3px 7px;border-radius:7px;font-weight:600;white-space:nowrap;overflow:hidden}
+.pill .nm{font-weight:800}
+.pill .tm{font-variant-numeric:tabular-nums;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.pill svg{flex:none;width:12px;height:12px}
+.p-tomek{background:var(--tt);color:light-dark(#1a4bb0,#9bbcff)}
+.p-natalia{background:var(--nt);color:light-dark(#a3204f,#ff9cc0)}
+.p-kuba{background:var(--kt);color:light-dark(#8a5b00,#ffd27a)}
+.pill.night.p-tomek{background:var(--t);color:#fff}
+.pill.night.p-natalia{background:var(--n);color:#fff}
+.pill.night.p-kuba{background:var(--k);color:#1b1300}
+.pill.extra{box-shadow:inset 0 0 0 2px currentColor}
+.pill.extra.night{box-shadow:inset 0 0 0 2px light-dark(#16171a,#fff)}
+.notes{margin-top:auto;font-size:12.5px;color:var(--mut);display:flex;flex-direction:column;gap:2px}
+.notes div{display:flex;gap:5px;align-items:baseline;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.notes i{font-style:normal;width:7px;height:7px;border-radius:50%;flex:none;background:var(--mut);transform:translateY(-1px)}
+.key{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px;color:var(--mut);margin-top:12px}
+.key span{display:inline-flex;align-items:center;gap:6px}
+/* panel */
+.ov{position:fixed;inset:0;background:rgb(0 0 0/.42);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.ov.on{display:flex}
+.panel{background:var(--bg);border-radius:16px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px 20px 24px;box-shadow:0 24px 60px rgb(0 0 0/.3)}
+.panel h2{margin:0;font-size:24px;line-height:1.15}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.panel h3{font-size:15px;margin:18px 0 8px;color:var(--mut);font-weight:700}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row .pill{flex:1 1 auto;font-size:15px;padding:8px 10px}
+.row .txt{flex:1 1 auto;overflow-wrap:anywhere}
+.row .txt small{display:block;color:var(--mut)}
+.empty{color:var(--mut);font-size:15px;padding:6px 0}
+form{display:grid;gap:10px;margin-top:10px;padding:14px;border-radius:12px;background:var(--soft)}
+.f2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+label{font-size:14px;font-weight:600;display:grid;gap:4px}
+input,select,textarea{font-size:16px;min-height:44px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--cell)}
+textarea{min-height:64px;resize:vertical}
+.chk{display:flex;align-items:center;gap:8px;font-weight:500}
+.chk input{min-height:0;width:20px;height:20px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 12px 10px 16px;border-radius:12px;display:none;align-items:center;gap:12px;z-index:20;font-size:15px;max-width:calc(100vw - 24px)}
+.toast.on{display:flex}
+.toast button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;min-height:36px;padding:0 12px;font-weight:700}
+@media(max-width:760px){
+ .legend{grid-template-columns:minmax(0,1fr)}
+ .who{min-height:52px;padding:8px 12px}
+ .cal{grid-template-columns:minmax(0,1fr)}
+ .wd,.day.pad{display:none}
+ .day{min-height:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 12px}
+ .dn{width:100%;justify-content:flex-start}.dn .wn{display:inline}
+ .notes{width:100%;margin-top:2px}
+ .pill{font-size:14px}
+}
+@media(prefers-reduced-motion:no-preference){.panel{animation:up .18s ease-out}@keyframes up{from{transform:translateY(10px);opacity:0}}}
+#printArea{display:none}
+@media print{@page{size:A4 portrait;margin:10mm}
+ body{background:#fff;color:#000;font:10pt/1.3 Arial,Helvetica,sans-serif}
+ body>*:not(#printArea){display:none!important}#printArea{display:block}
+ #printArea h1{font-size:17pt;margin:0 0 6px}#printArea table{width:100%;border-collapse:collapse;table-layout:fixed}
+ #printArea th,#printArea td{border:1px solid #999;padding:2px 5px;vertical-align:top;font-size:9.5pt}#printArea th{background:#e6e6e6;text-align:left}
+ #printArea td.d{width:13%;white-space:nowrap}#printArea .no{width:30%;font-size:9pt}#printArea tr.we td{background:#f0f0f0}#printArea .n{font-weight:bold}
+ #printArea tfoot td{background:#e6e6e6}#printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}#printArea .leg{font-size:8.5pt;margin:4px 0 0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header>
+  <h1 id="title">Grafik<small>Tomek · Natalia · Kuba</small></h1>
+  <div class="nav">
+   <button class="btn icon" id="prev" aria-label="Poprzedni miesiąc">‹</button>
+   <button class="btn" id="todayBtn">Dziś</button>
+   <button class="btn icon" id="next" aria-label="Następny miesiąc">›</button>
+   <button class="btn pri" id="printBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7"/></svg>Drukuj</button>
+  </div>
+ </header>
+ <div class="legend" id="legend"></div>
+ <div class="status" id="status" role="status">Łączenie z grafikiem…</div>
+ <div class="cal" id="cal"></div>
+ <div class="key">
+  <span><span class="pill p-tomek"><span class="tm">6:00–14:00</span></span> zmiana dzienna</span>
+  <span><span class="pill night p-tomek"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg><span class="tm">22:00–6:00</span></span> zmiana nocna</span>
+  <span><span class="pill extra p-tomek"><span class="tm">+ ekstra</span></span> zmiana dodatkowa</span>
+  <span>Kliknij dzień, aby dodać zmianę lub notatkę.</span>
+ </div>
+</div>
+
+<div class="ov" id="ov" aria-hidden="true">
+ <div class="panel" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+  <div class="ph"><h2 id="pTitle"></h2><button class="btn icon" id="close" aria-label="Zamknij">✕</button></div>
+  <h3>Zmiany</h3>
+  <div id="pShifts"></div>
+  <form id="fShift">
+   <input type="hidden" id="sId">
+   <label>Osoba<select id="sPerson"></select></label>
+   <div class="f2"><label>Od<input type="time" id="sStart" required value="06:00"></label><label>Do<input type="time" id="sEnd" required value="14:00"></label></div>
+   <label class="chk"><input type="checkbox" id="sExtra"> Zmiana dodatkowa (ekstra)</label>
+   <div class="acts"><button class="btn pri" id="sSave">Dodaj zmianę</button><button type="button" class="btn" id="sCancel" hidden>Anuluj edycję</button></div>
+  </form>
+  <h3>Notatki</h3>
+  <div id="pNotes"></div>
+  <form id="fNote">
+   <label>Kogo dotyczy<select id="nPerson"><option value="">Wszystkich / ogólna</option></select></label>
+   <label>Notatka<textarea id="nText" required maxlength="300" placeholder="np. lekarz 14:00, zamiana z Kubą…"></textarea></label>
+   <div class="acts"><button class="btn pri">Dodaj notatkę</button></div>
+  </form>
+ </div>
+</div>
+<div class="ov" id="pinOv"><form class="panel" id="pinF" style="max-width:360px"><h2>Podaj PIN</h2><label>PIN do grafiku<input id="pinIn" type="password" inputmode="numeric" autocomplete="current-password" required></label><button class="btn pri">Otwórz grafik</button></form></div>
+<div id="printArea"></div>
+<div class="toast" id="toast" role="status"><span id="tMsg"></span><button id="tUndo">Cofnij</button></div>
+
+<script>
+{
+const P=[{id:'tomek',name:'Tomek',c:'var(--t)'},{id:'natalia',name:'Natalia',c:'var(--n)'},{id:'kuba',name:'Kuba',c:'var(--k)'}];
+const PN=Object.fromEntries(P.map(p=>[p.id,p.name]));
+const MON=['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+const MONG=['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+const WD=['Pn','Wt','Śr','Cz','Pt','So','Nd'];
+const WDL=['niedziela','poniedziałek','wtorek','środa','czwartek','piątek','sobota'];
+const MOON='<svg viewBox="0 0 24 24" fill="currentColor" aria-label="noc"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg>';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+const now=new Date();const TODAY=ymd(now.getFullYear(),now.getMonth(),now.getDate());
+let Y=now.getFullYear(),M=now.getMonth(),jumped=false;
+let shifts=[],notes=[],hidden=new Set(),canWrite=true,openDate=null,undo=null;
+try{hidden=new Set(JSON.parse(localStorage.getItem('grafik-hidden')||'[]'))}catch(e){}
+
+const mins=t=>{const[h,m]=String(t||'0:0').split(':').map(Number);return(h||0)*60+(m||0)};
+const dur=s=>{let d=mins(s.end)-mins(s.start);if(d<=0)d+=1440;return d};
+const isNight=s=>mins(s.end)<=mins(s.start)||mins(s.start)>=1200;
+const ft=t=>{const[h,m]=String(t).split(':');return `${Number(h)}:${m}`};
+const hrs=m=>{const h=m/60;return(Number.isInteger(h)?h:h.toFixed(1).replace('.',','))+' h'};
+const ord=p=>P.findIndex(x=>x.id===p);
+const dayShifts=d=>shifts.filter(s=>s.date===d).sort((a,b)=>ord(a.person)-ord(b.person)||mins(a.start)-mins(b.start));
+const dayNotes=d=>notes.filter(n=>n.date===d).sort((a,b)=>(a.created||0)-(b.created||0));
+const pill=(s,showName=true)=>`<span class="pill p-${esc(s.person)}${isNight(s)?' night':''}${s.extra?' extra':''}">${isNight(s)?MOON:''}${showName?`<span class="nm">${esc(PN[s.person]||s.person)}</span>`:''}<span class="tm">${esc(ft(s.start))}–${esc(ft(s.end))}${s.extra?' · ekstra':''}</span></span>`;
+
+function render(){
+ $('title').innerHTML=`Grafik – ${MON[M]} ${Y}<small>Tomek · Natalia · Kuba</small>`;
+ const pre=`${Y}-${pad(M+1)}-`,ms=shifts.filter(s=>s.date.startsWith(pre));
+ $('legend').innerHTML=P.map(p=>{const a=ms.filter(s=>s.person===p.id);const nights=a.filter(isNight).length,ex=a.filter(s=>s.extra).length;
+  return `<button class="who${hidden.has(p.id)?' off':''}" data-p="${p.id}" aria-pressed="${!hidden.has(p.id)}"><span class="dot" style="background:${p.c}"></span><span><b>${p.name}</b><span>${a.length} zmian · ${hrs(a.reduce((t,s)=>t+dur(s),0))}${nights?` · ${nights} nocy`:''}${ex?` · ${ex} ekstra`:''}</span></span></button>`}).join('');
+ const first=new Date(Y,M,1),off=(first.getDay()+6)%7,days=new Date(Y,M+1,0).getDate();
+ let h=WD.map(w=>`<div class="wd">${w}</div>`).join('');
+ for(let i=0;i<off;i++)h+='<div class="day pad"></div>';
+ for(let d=1;d<=days;d++){const k=ymd(Y,M,d),dow=new Date(Y,M,d).getDay();
+  const sh=dayShifts(k).filter(s=>!hidden.has(s.person)),no=dayNotes(k);
+  h+=`<button class="day${dow===0||dow===6?' we':''}${k===TODAY?' today':''}" data-d="${k}" aria-label="${d} ${MONG[M]}"><div class="dn"><span><span class="num">${d}</span><span class="wn">${WDL[dow]}</span></span></div>${sh.map(s=>pill(s)).join('')}${no.length?`<div class="notes">${no.map(n=>`<div><i style="${n.person?`background:${P[ord(n.person)]?.c}`:''}"></i>${esc(n.text)}</div>`).join('')}</div>`:''}</button>`}
+ const tail=(7-(off+days)%7)%7;for(let i=0;i<tail;i++)h+='<div class="day pad"></div>';
+ $('cal').innerHTML=h;
+ if(openDate)renderPanel();
+}
+
+function renderPanel(){
+ const d=openDate,dt=new Date(d+'T12:00');
+ $('pTitle').textContent=`${WDL[dt.getDay()]}, ${dt.getDate()} ${MONG[dt.getMonth()]}`;
+ const sh=dayShifts(d),no=dayNotes(d);
+ $('pShifts').innerHTML=sh.length?sh.map(s=>`<div class="row">${pill(s)}${canWrite?`<button class="btn icon" data-edit="${esc(s.id)}" aria-label="Edytuj">✎</button><button class="btn icon danger" data-del="${esc(s.id)}" aria-label="Usuń">🗑</button>`:''}</div>`).join(''):'<div class="empty">Nikt nie pracuje tego dnia.</div>';
+ $('pNotes').innerHTML=no.length?no.map(n=>`<div class="row"><div class="txt">${esc(n.text)}<small>${n.person?esc(PN[n.person]||''):'ogólna'}</small></div>${canWrite?`<button class="btn icon danger" data-deln="${esc(n.id)}" aria-label="Usuń notatkę">🗑</button>`:''}</div>`).join(''):'<div class="empty">Brak notatek.</div>';
+ $('fShift').hidden=$('fNote').hidden=!canWrite;
+}
+function openDay(d){openDate=d;resetShiftForm();$('nText').value='';renderPanel();$('ov').classList.add('on');$('ov').setAttribute('aria-hidden','false');$('close').focus()}
+function closeDay(){openDate=null;$('ov').classList.remove('on');$('ov').setAttribute('aria-hidden','true')}
+function resetShiftForm(){$('sId').value='';$('sSave').textContent='Dodaj zmianę';$('sCancel').hidden=true;$('sExtra').checked=false}
+const DEF={tomek:['06:00','14:00'],natalia:['07:00','19:00'],kuba:['08:00','20:00']};
+$('sPerson').innerHTML=P.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+$('nPerson').innerHTML+=P.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+$('sPerson').onchange=()=>{if(!$('sId').value){const[a,b]=DEF[$('sPerson').value];$('sStart').value=a;$('sEnd').value=b}};
+
+function toast(msg,fn){$('tMsg').textContent=msg;undo=fn;$('tUndo').hidden=!fn;$('toast').classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').classList.remove('on'),6000)}
+function fail(e){if(e&&e.code==='pin')return;toast('Nie udało się zapisać. Sprawdź internet i spróbuj ponownie.')}
+let PIN='';try{PIN=localStorage.getItem('grafik-pin')||''}catch(e){}
+const newId=()=>((crypto.randomUUID&&crypto.randomUUID())||Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g,'').slice(0,64);
+function apply(st){shifts=(st.shifts||[]).filter(x=>typeof x.date==='string');notes=(st.notes||[]).filter(x=>typeof x.date==='string');
+ if(!jumped&&shifts.length){jumped=true;const cur=`${Y}-${pad(M+1)}`;if(!shifts.some(x=>x.date.startsWith(cur))){const f=shifts.map(x=>x.date).filter(x=>x>=cur).sort()[0]||shifts.map(x=>x.date).sort()[0];Y=+f.slice(0,4);M=+f.slice(5,7)-1}}
+ render()}
+function askPin(){$('pinOv').classList.add('on');$('pinIn').value='';$('pinIn').focus()}
+async function req(method,body){const r=await fetch('/api/data',{method,cache:'no-store',headers:{'content-type':'application/json','x-pin':PIN},body:body&&JSON.stringify(body)});
+ if(r.status===401){askPin();throw{code:'pin'}}if(!r.ok)throw{code:'http'};apply(await r.json())}
+const api=(action,kind,id,data)=>req('POST',{action,kind,id,data});
+async function load(){try{await req('GET');$('status').textContent='Zmiany zapisują się automatycznie i są widoczne dla wszystkich z linkiem.'}catch(e){if(e.code!=='pin')$('status').textContent='Nie można pobrać grafiku – sprawdź połączenie.'}}
+$('pinF').onsubmit=e=>{e.preventDefault();PIN=$('pinIn').value.trim();try{localStorage.setItem('grafik-pin',PIN)}catch(e){}$('pinOv').classList.remove('on');load()};
+
+$('fShift').onsubmit=async e=>{e.preventDefault();
+ const id=$('sId').value,body={date:openDate,person:$('sPerson').value,start:$('sStart').value,end:$('sEnd').value,extra:$('sExtra').checked};
+ try{await api('set','shifts',id||newId(),body);resetShiftForm();toast(id?'Zmiana zaktualizowana.':'Zmiana dodana.')}catch(err){fail(err)}};
+$('sCancel').onclick=resetShiftForm;
+$('fNote').onsubmit=async e=>{e.preventDefault();const t=$('nText').value.trim();if(!t)return;
+ try{await api('set','notes',newId(),{date:openDate,person:$('nPerson').value,text:t,created:Date.now()});$('nText').value='';toast('Notatka dodana.')}catch(err){fail(err)}};
+$('ov').onclick=async e=>{
+ if(e.target===$('ov'))return closeDay();
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.edit){const s=shifts.find(x=>x.id===b.dataset.edit);if(!s)return;$('sId').value=s.id;$('sPerson').value=s.person;$('sStart').value=s.start;$('sEnd').value=s.end;$('sExtra').checked=!!s.extra;$('sSave').textContent='Zapisz zmianę';$('sCancel').hidden=false;$('sStart').focus()}
+ const del=async(col,id,list,label)=>{const it=list.find(x=>x.id===id);if(!it)return;const {id:_,...body}=it;
+  try{await api('delete',col,id);toast(label,async()=>{try{await api('set',col,id,body)}catch(err){fail(err)}})}catch(err){fail(err)}};
+ if(b.dataset.del)del('shifts',b.dataset.del,shifts,'Zmiana usunięta.');
+ if(b.dataset.deln)del('notes',b.dataset.deln,notes,'Notatka usunięta.');
+};
+$('close').onclick=closeDay;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openDate)closeDay()});
+$('tUndo').onclick=()=>{$('toast').classList.remove('on');if(undo)undo();undo=null};
+$('cal').onclick=e=>{const b=e.target.closest('.day[data-d]');if(b)openDay(b.dataset.d)};
+$('legend').onclick=e=>{const b=e.target.closest('.who');if(!b)return;const p=b.dataset.p;hidden.has(p)?hidden.delete(p):hidden.add(p);try{localStorage.setItem('grafik-hidden',JSON.stringify([...hidden]))}catch(e){}render()};
+$('prev').onclick=()=>{M--;if(M<0){M=11;Y--}render()};
+$('next').onclick=()=>{M++;if(M>11){M=0;Y++}render()};
+$('todayBtn').onclick=()=>{Y=now.getFullYear();M=now.getMonth();render()};
+
+function printDoc(){
+ const days=new Date(Y,M+1,0).getDate(),pre=`${Y}-${pad(M+1)}-`;
+ const cell=s=>`<div class="${isNight(s)?'n':''}">${isNight(s)?'☾ ':''}${esc(ft(s.start))}–${esc(ft(s.end))}${s.extra?' <b>(ekstra)</b>':''}</div>`;
+ let rows='';
+ for(let d=1;d<=days;d++){const k=ymd(Y,M,d),dow=new Date(Y,M,d).getDay(),sh=dayShifts(k),no=dayNotes(k);
+  rows+=`<tr class="${dow===0||dow===6?'we':''}"><td class="d"><b>${d}</b> ${WD[(dow+6)%7]}</td>${P.map(p=>`<td>${sh.filter(s=>s.person===p.id).map(cell).join('')}</td>`).join('')}<td class="no">${no.map(n=>`${n.person?`<b>${esc(PN[n.person]||'')}:</b> `:''}${esc(n.text)}`).join('<br>')}</td></tr>`}
+ const tot=P.map(p=>{const a=shifts.filter(s=>s.date.startsWith(pre)&&s.person===p.id);return `<td><b>${a.length} zm. · ${hrs(a.reduce((t,s)=>t+dur(s),0))}</b></td>`}).join('');
+ return `<h1>Grafik – ${MON[M]} ${Y}</h1><table><thead><tr><th class="d">Dzień</th>${P.map(p=>`<th>${p.name}</th>`).join('')}<th class="no">Notatki</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Razem</td>${tot}<td></td></tr></tfoot></table><p class="leg">☾ i pogrubienie = zmiana nocna · (ekstra) = zmiana dodatkowa</p>`;
+}
+$('printBtn').onclick=()=>{$('printArea').innerHTML=printDoc();window.print()};
+window.addEventListener('afterprint',()=>{$('printArea').innerHTML=''});
+
+render();
+load();
+setInterval(()=>{if(document.visibilityState==='visible')load()},20000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
+}
+</script>
+</body>
+</html>
