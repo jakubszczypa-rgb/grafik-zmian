@@ -193,28 +193,34 @@ textarea{min-height:70px;resize:vertical}
 body.allpast .day.past{display:flex}
 @media(prefers-reduced-motion:no-preference){.panel{animation:up .2s ease-out}@keyframes up{from{transform:translateY(14px);opacity:0}}}
 @media print{
- .vsw{display:none!important}
- .wk{border-radius:6px}.wc{min-height:40px}.wh.today b{background:none;color:inherit}
- @page{size:A4 landscape;margin:8mm}
- :root,:root[data-theme=dark]{color-scheme:light}
+ @page{size:A4 landscape;margin:7mm}
+ :root,:root[data-theme=dark]{color-scheme:light;--line:#6b6e76;--card:#fff;--sat:#f3f3ef;--redbg:#fde9e8;--ink:#111}
  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
- body{background:#fff;color:#17181b;font-size:11px}
- .nav,.status,.noprint,.ov,.toast,.now,.showpast{display:none!important}
+ body{background:#fff;color:#111;font-size:12px}
+ .nav,.vsw,.status,.noprint,.ov,.toast,.now,.showpast{display:none!important}
  .wrap{max-width:none;padding:0}
- header{margin-bottom:6px}h1{font-size:22px}.eyebrow{display:none}
- .legend{gap:6px;margin-bottom:6px}
- .who{padding:4px 8px;border-radius:8px;gap:6px}.av{width:18px;height:18px;font-size:10px}.who b{font-size:12px;display:inline;margin-right:6px}.who span.st{font-size:10px}
+ header{margin-bottom:4px}h1{font-size:22px}.eyebrow{display:none}
+ .legend{gap:5px;margin-bottom:5px}
+ .who{padding:3px 8px;border-radius:7px;gap:6px;border-color:#999}.av{width:18px;height:18px;font-size:10px}.who b{font-size:12.5px;display:inline;margin-right:6px}.who span.st{font-size:10.5px;color:#333}.who .sm{display:none}.who .lg{display:inline}
  .who.off{display:none}
- .cal{grid-template-columns:repeat(7,minmax(0,1fr));border-radius:6px}
- .wd{display:block;padding:3px 6px;font-size:10px}
+ /* miesiąc: siatka wypełnia całą stronę, wyraźne linie */
+ .cal{grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:7mm repeat(var(--rows,5),minmax(0,1fr));height:163mm;border:1.5px solid #333;border-radius:4px;background:#333;gap:1px}
+ .wd{display:flex;align-items:center;padding:0 7px;font-size:11.5px;color:#111;background:#e9e9e4}.wd.sun{color:var(--red)}
  .day.pad,.slot.e,.day.past{display:flex}.day.past>*{opacity:1}
  .day.today{box-shadow:none}.today .num{background:none;color:inherit}.today.hol .num{background:none;color:var(--red)}
- .day{min-height:29mm;padding:4px 5px;flex-direction:column;align-items:stretch;gap:2px;break-inside:avoid}
- .dn{min-height:0;margin:0}.num{font-size:11px;height:auto;min-width:0;padding:0}.dn .wn{display:none}.hn{font-size:8.5px}
- .slot{gap:2px}
- .pill{font-size:9.5px;padding:2px 4px;border-radius:4px}.pill svg{width:8px;height:8px}
- .notes{font-size:9px}.nt{white-space:normal}.dot{width:7px;height:7px}
- .key{margin-top:6px;font-size:10px}
+ .day{min-height:0;padding:4px 5px;flex-direction:column;align-items:stretch;gap:3px;break-inside:avoid;overflow:hidden}
+ .dn{min-height:0;margin:0}.num{font-size:14px;font-weight:800;height:auto;min-width:0;padding:0}.dn .wn{display:none}.hn{font-size:9.5px}
+ .slot{gap:3px}
+ .pill{font-size:12.5px;padding:3px 6px;border-radius:5px;line-height:1.25}.pill .nm{font-weight:800}.pill svg{width:10px;height:10px}
+ .pill.extra{box-shadow:inset 0 0 0 1.5px #fff,0 0 0 1.5px #111}
+ .notes{font-size:10.5px;padding-top:2px}.nt{white-space:normal}.dot{width:8px;height:8px}.nt .dot{margin-top:3px}
+ /* tydzień */
+ .wk{border:1.5px solid #333;border-radius:4px;background:#333;gap:1px;grid-template-columns:34mm repeat(7,minmax(0,1fr));grid-template-rows:16mm repeat(var(--wrows,3),34mm) minmax(24mm,auto);grid-auto-rows:auto}
+ .wh.today b{background:none;color:inherit}.wh b{font-size:22px}.wh small{font-size:12px;color:#333}
+ .wn2 b{font-size:16px}.wn2 small{font-size:12px}.wn2 .av{width:28px;height:28px;font-size:14px}
+ .wc{min-height:0}.wc .pill{font-size:17px;padding:10px 6px;border-radius:7px}.wc .pill svg{width:13px;height:13px}
+ .wc .off{font-size:16px}.wc.nts{font-size:11.5px}.wk .past{opacity:1}
+ .key{margin-top:5px;font-size:10.5px;color:#333}
 }
 </style>
 </head>
@@ -333,7 +339,7 @@ function renderWeek(){
   h+=`<div class="wn2">${avatar(p.id)}<span><b>${p.name}</b><small>${hrs(x.reduce((t,s)=>t+dur(s),0))}</small></span></div>`;
   h+=days.map((d,i)=>{const k=ks[i],hn=holName(k),ps=dayShifts(k).filter(s=>s.person===p.id);return `<button class="wc${d.getDay()===0||hn?' hol':d.getDay()===6?' sat':''}${k<TODAY?' past':''}" data-d="${k}">${ps.length?ps.map(pillW).join(''):'<span class="off">–</span>'}</button>`}).join('')}
  h+='<div class="wn2"><span><b>Notatki</b></span></div>'+days.map((d,i)=>{const k=ks[i],no=dayNotes(k);return `<button class="wc nts${k<TODAY?' past':''}" data-d="${k}">${no.map(n=>`<div class="nt"><i class="dot" style="background:${dotBg(persons(n))}"></i><span>${esc(n.text)}</span></div>`).join('')}</button>`}).join('');
- $('wk').innerHTML=h;
+ $('wk').innerHTML=h;$('wk').style.setProperty('--wrows',vis.length);
 }
 const pillW=s=>`<span class="pill p-${esc(s.person)}${s.extra?' extra':''}">${isNight(s)?MOON:''}<span class="tm">${esc(fs(s.start))}–${esc(fs(s.end))}</span></span>`;
 function render(){
@@ -353,7 +359,7 @@ function render(){
   const sh=dayShifts(k),no=dayNotes(k);
   h+=`<button class="day${dow===6?' sat':''}${hol?' hol':''}${past?' past':''}${k===TODAY?' today':''}" data-d="${k}" aria-label="${d} ${MONG[M]}${hn?', '+esc(hn):''}"><div class="dn"><span><span class="num">${d}</span><span class="wn">${WDL[dow]}</span></span>${hn?`<span class="hn">${esc(hn)}</span>`:''}</div>${vis.map(p=>{const ps=sh.filter(s=>s.person===p.id);return ps.length?`<div class="slot">${ps.map(pill).join('')}</div>`:'<div class="slot e"><span class="pill ghost" aria-hidden="true">&nbsp;</span></div>'}).join('')}${no.length?`<div class="notes">${no.map(n=>`<div class="nt"><i class="dot" style="background:${dotBg(persons(n))}"></i><span>${esc(n.text)}</span></div>`).join('')}</div>`:''}</button>`}
  const tail=(7-(off+days)%7)%7;for(let i=0;i<tail;i++)h+='<div class="day pad"></div>';
- $('cal').innerHTML=h;
+ $('cal').innerHTML=h;$('cal').style.setProperty('--rows',(off+days+tail)/7);
  $('showPast').hidden=!anyPast||document.body.classList.contains('allpast');
  if(openDate)renderPanel();
 }
